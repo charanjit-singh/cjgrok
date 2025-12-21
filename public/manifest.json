@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "CJGrok",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "description": "CJGrok - Manage your Grok posts",
     "icons": {
         "16": "images/icon.png",
@@ -11,7 +11,8 @@
     "permissions": [
         "storage",
         "webRequest",
-        "tabs"
+        "tabs",
+        "alarms"
     ],
     "background": {
         "service_worker": "background.js"
