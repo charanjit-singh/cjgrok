@@ -1,6 +1,23 @@
 # CJGrok - Grok Imagine Post Manager
 
+<div align="center">
+  <img src="resources/all-posts.png" alt="CJGrok Gallery View" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+  
+  <div style="display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;">
+    <img src="resources/screenshot-1.png" alt="Extension Preview" width="48%" style="border-radius: 8px;">
+    <img src="resources/upscaling.png" alt="Post Details" width="48%" style="border-radius: 8px;">
+  </div>
+</div>
+
+<br/>
+
+<div align="center">
+
 A Chrome extension to manage and delete your Grok Imagine posts. View all your posts in a gallery, delete individual posts, or bulk delete them all.
+
+[**Features**](#features) • [**Installation**](#installation) • [**Usage**](#usage) • [**Privacy**](#privacy--security)
+
+</div>
 
 ## Features
 
@@ -73,7 +90,11 @@ The workflow will:
 
 ## License
 
-MIT
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+Copyright © 2025 Charanjit Singh. All Rights Reserved.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 ## Contributing
 
