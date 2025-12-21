@@ -57,6 +57,29 @@
         .error {
             color: #e0245e;
         }
+        .footer {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 11px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #8899a6;
+        }
+        .update-link {
+            color: #1DA1F2;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .update-link:hover {
+            text-decoration: underline;
+        }
+        .update-available {
+            color: #e0245e;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -64,6 +87,10 @@
         <h1>CJGrok</h1>
         <div id="status" class="status">Checking page...</div>
         <button id="openModal">Open All Posts</button>
+        <div class="footer">
+            <a href="#" id="checkUpdate" class="update-link">Check for updates</a>
+            <span id="version"></span>
+        </div>
     </div>
     <script src="popup.js"></script>
 </body>

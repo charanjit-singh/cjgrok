@@ -32,5 +32,42 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     statusEl.className = 'status error';
     buttonEl.disabled = true;
   }
+
+  // Version and Update Logic
+  const versionEl = document.getElementById('version');
+  const checkUpdateLink = document.getElementById('checkUpdate');
+  
+  if (versionEl) {
+    versionEl.textContent = 'v' + chrome.runtime.getManifest().version;
+  }
+
+  if (checkUpdateLink) {
+    checkUpdateLink.onclick = (e) => {
+        e.preventDefault();
+        checkUpdateLink.textContent = 'Checking...';
+        
+        chrome.runtime.sendMessage({ action: 'checkForUpdate' }, (response) => {
+            if (response && response.success) {
+                if (response.updateAvailable) {
+                    checkUpdateLink.textContent = `Update available: v${response.updateAvailable.version}`;
+                    checkUpdateLink.className = 'update-link update-available';
+                    checkUpdateLink.href = response.updateAvailable.url;
+                    checkUpdateLink.onclick = null; // Let standard link behavior take over
+                    checkUpdateLink.target = '_blank';
+                } else {
+                    checkUpdateLink.textContent = 'Up to date';
+                    setTimeout(() => {
+                        checkUpdateLink.textContent = 'Check for updates';
+                    }, 2000);
+                }
+            } else {
+                checkUpdateLink.textContent = 'Error checking';
+                setTimeout(() => {
+                    checkUpdateLink.textContent = 'Check for updates';
+                }, 2000);
+            }
+        });
+    };
+  }
 });
 

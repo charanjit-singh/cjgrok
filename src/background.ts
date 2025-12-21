@@ -76,14 +76,38 @@ async function checkForUpdate() {
   }
 }
 
-// Check on startup
-chrome.runtime.onStartup.addListener(checkForUpdate);
-chrome.runtime.onInstalled.addListener(checkForUpdate);
-
-// Check periodically (every 6 hours)
-chrome.alarms.create(UPDATE_CHECK_ALARM, { periodInMinutes: 360 });
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === UPDATE_CHECK_ALARM) {
-    checkForUpdate();
+// Listen for manual update check from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'checkForUpdate') {
+    checkForUpdate().then(() => {
+      // Return status from storage
+      chrome.storage.local.get('updateAvailable', (data) => {
+        sendResponse({ 
+          success: true, 
+          updateAvailable: data.updateAvailable,
+          currentVersion: chrome.runtime.getManifest().version 
+        });
+      });
+    });
+    return true; // Keep channel open for async response
   }
 });
+
+// Check on startup
+chrome.runtime.onStartup.addListener(checkForUpdate);
+chrome.runtime.onInstalled.addListener(() => {
+  checkForUpdate();
+  // Create alarm only if API is available
+  if (chrome.alarms) {
+    chrome.alarms.create(UPDATE_CHECK_ALARM, { periodInMinutes: 360 });
+  }
+});
+
+// Check periodically (every 6 hours)
+if (chrome.alarms) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === UPDATE_CHECK_ALARM) {
+      checkForUpdate();
+    }
+  });
+}
