@@ -1,6 +1,6 @@
 {
 	"name": "cjgrok",
-	"version": "1.2.2",
+	"version": "1.2.3",
 	"description": "CJGrok - Manage your Grok posts",
 	"scripts": {
 		"build": "NODE_ENV=production webpack --config webpack/webpack.config.js",
