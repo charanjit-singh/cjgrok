@@ -18,12 +18,28 @@ class CJGrok {
   private isDeleting: boolean = false;
   private stopDeleting: boolean = false;
   private headers: GrokHeaders | null = null;
+  private updateInfo: { version: string, url: string } | null = null;
 
   constructor() {
     this.init();
   }
 
   private init() {
+    // Check for updates
+    chrome.storage.local.get('updateAvailable', (data) => {
+      if (data.updateAvailable) {
+        this.updateInfo = data.updateAvailable;
+        this.checkAndCreateUI();
+      }
+    });
+
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.updateAvailable) {
+        this.updateInfo = changes.updateAvailable.newValue;
+        this.checkAndCreateUI();
+      }
+    });
+
     // Listen for messages from popup
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'openModal') {
@@ -105,6 +121,22 @@ class CJGrok {
     });
     this.button.addEventListener('click', () => this.toggleModal());
     
+    if (this.updateInfo) {
+      const badge = document.createElement('div');
+      badge.style.cssText = `
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 12px;
+        height: 12px;
+        background-color: #e0245e;
+        border-radius: 50%;
+        border: 2px solid #000;
+        z-index: 100000;
+      `;
+      this.button.appendChild(badge);
+    }
+    
     document.body.appendChild(this.button);
     this.createModal();
   }
@@ -146,6 +178,45 @@ class CJGrok {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
     `;
+
+    if (this.updateInfo) {
+      const updateBanner = document.createElement('div');
+      updateBanner.style.cssText = `
+        background: rgba(29, 161, 242, 0.2);
+        border: 1px solid rgba(29, 161, 242, 0.5);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      `;
+      
+      const updateText = document.createElement('span');
+      updateText.textContent = `Update available: v${this.updateInfo.version}`;
+      updateText.style.fontWeight = '600';
+      
+      const updateLink = document.createElement('a');
+      updateLink.href = this.updateInfo.url;
+      updateLink.target = '_blank';
+      updateLink.textContent = 'Get Update';
+      updateLink.style.cssText = `
+        background: #1DA1F2;
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 700;
+        transition: opacity 0.2s;
+      `;
+      updateLink.onmouseover = () => updateLink.style.opacity = '0.9';
+      updateLink.onmouseout = () => updateLink.style.opacity = '1';
+
+      updateBanner.appendChild(updateText);
+      updateBanner.appendChild(updateLink);
+      modalContent.appendChild(updateBanner);
+    }
 
     // Header
     const header = document.createElement('div');
