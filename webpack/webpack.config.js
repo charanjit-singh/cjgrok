@@ -7,14 +7,11 @@ module.exports = {
   watch: process.env.NODE_ENV !== "production",
   devtool: process.env.NODE_ENV === "production" ? false : "inline-source-map",
   watchOptions: {
-    // Ignore dist folder and node_modules
     ignored: /node_modules|dist/,
   },
   entry: {
-    background: path.resolve(__dirname, "..", "src", "background.ts"),
     inject: path.resolve(__dirname, "..", "src", "inject.ts"),
-    content: path.resolve(__dirname, "..", "src", "content.ts"),
-    options: path.resolve(__dirname, "..", "src", "options.ts"),
+    background: path.resolve(__dirname, "..", "src", "background.ts"),
   },
   output: {
     path: path.join(__dirname, "../dist"),

@@ -1,53 +1,39 @@
 {
     "manifest_version": 3,
-    "name": "Twitter DM Helper",
-    "version": "1.0",
-    "description": "Automate Twitter DMs with customizable templates and rate limiting",
+    "name": "CJGrok",
+    "version": "1.2",
+    "description": "CJGrok - Manage your Grok posts",
     "icons": {
         "16": "images/icon.png",
         "48": "images/icon.png",
         "128": "images/icon.png"
     },
     "permissions": [
-        "clipboardWrite",
-        "cookies",
-        "notifications",
         "storage",
-        "scripting",
-        "tabs",
         "webRequest",
-        "downloads"
+        "tabs"
     ],
     "background": {
         "service_worker": "background.js"
     },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "CJGrok - All Posts"
+    },
     "content_scripts": [
         {
             "matches": [
-                "https://x.com/*"
-            ],
-            "js": [
-                "content.js"
-            ],
-            "run_at": "document_end"
-        },
-        {
-            "matches": [
-                "https://x.com/*"
+                "https://grok.com/*",
+                "https://x.ai/*"
             ],
             "js": [
                 "inject.js"
             ],
-            "run_at": "document_end",
-            "world": "MAIN"
+            "run_at": "document_end"
         }
     ],
     "host_permissions": [
-        "https://x.com/*"
-    ],
-    "options_page": "options.html",
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self';",
-        "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
-    }
+        "https://grok.com/*",
+        "https://x.ai/*"
+    ]
 }
