@@ -1,7 +1,18 @@
 {
+	"name": "cjgrok",
+	"version": "1.2.2",
+	"description": "CJGrok - Manage your Grok posts",
 	"scripts": {
 		"build": "NODE_ENV=production webpack --config webpack/webpack.config.js",
-		"dev": "NODE_ENV=development webpack --config webpack/webpack.config.js --watch --progress"
+		"dev": "NODE_ENV=development webpack --config webpack/webpack.config.js --watch --progress",
+		"zip": "npm run build && cd dist && bestzip ../cjgrok-extension.zip . && cd ..",
+		"update-version": "node scripts/update-version.js",
+		"version:patch": "npm version patch --no-git-tag-version && npm run update-version",
+		"version:minor": "npm version minor --no-git-tag-version && npm run update-version",
+		"version:major": "npm version major --no-git-tag-version && npm run update-version",
+		"release:patch": "npm run version:patch && git add . && git commit -m \"chore: bump version\" && git tag v$(node -p \"require('./package.json').version\") && git push && git push --tags",
+		"release:minor": "npm run version:minor && git add . && git commit -m \"chore: bump version\" && git tag v$(node -p \"require('./package.json').version\") && git push && git push --tags",
+		"release:major": "npm run version:major && git add . && git commit -m \"chore: bump version\" && git tag v$(node -p \"require('./package.json').version\") && git push && git push --tags"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.0.287",
@@ -10,6 +21,7 @@
 		"ts-loader": "^9.5.1",
 		"typescript": "^5.7.2",
 		"webpack": "^5.97.1",
-		"webpack-cli": "^5.1.4"
+		"webpack-cli": "^5.1.4",
+		"bestzip": "^2.2.1"
 	}
 }
