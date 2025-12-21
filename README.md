@@ -1,4 +1,4 @@
-# CJGrok - Grok Imagine Post Manager
+# CJGrok - Add Superpowers to Grok
 
 <div align="center">
   <img src="resources/all-posts.png" alt="CJGrok Gallery View" width="100%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
@@ -13,7 +13,7 @@
 
 <div align="center">
 
-A Chrome extension to manage and delete your Grok Imagine posts. View all your posts in a gallery, delete individual posts, or bulk delete them all.
+A Chrome extension that provides superpowers to Grok AI. It is designed to manage and delete your Grok Imagine posts, especially the hidden ones.
 
 [**Features**](#features) • [**Installation**](#installation) • [**Usage**](#usage) • [**Privacy**](#privacy--security)
 
@@ -21,12 +21,10 @@ A Chrome extension to manage and delete your Grok Imagine posts. View all your p
 
 ## Features
 
+- ⚡ **Grok AI Superpowers**: Enhanced control over your generated content
+- 🗑️ **Delete Hidden Posts**: Easily access and delete posts that are otherwise hidden in Grok Imagine
 - 📸 **Gallery View**: Browse all your Grok Imagine posts in a grid layout
-- 🖼️ **Thumbnail Preview**: See post thumbnails with prompts and creation dates
-- 🗑️ **Delete Posts**: Delete individual posts or bulk delete all posts sequentially
 - 🔒 **Privacy Control**: Take control of your Grok Imagine posts
-- 🎨 **Beautiful UI**: Modern, semi-transparent design with blur effects
-- ⚡ **Easy Access**: Quick access button on the Imagine page or via extension popup
 
 ## Installation
 
