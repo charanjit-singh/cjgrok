@@ -856,7 +856,7 @@ class CJGrok {
       link.style.cssText = `
         display: block;
         position: relative;
-        aspect-ratio: 1;
+        height: 280px;
         border-radius: 12px;
         overflow: hidden;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1055,7 +1055,7 @@ class CJGrok {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            aspect-ratio: 1;
+            height: 280px;
             border-radius: 12px;
             overflow: hidden;
             border: 2px dashed rgba(255, 255, 255, 0.2);
