@@ -28,8 +28,63 @@ class CJGrok {
   private progressModal: HTMLElement | null = null;
   private progressContent: HTMLElement | null = null;
 
+  // Concurrency settings for parallel deletion
+  // Conservative defaults to avoid rate limiting - adjust if needed
+  private readonly CONCURRENCY_LIMIT = 5; // Number of simultaneous delete requests
+  private readonly DELETE_BATCH_DELAY = 500; // Delay between batches (ms)
+  private readonly PER_REQUEST_DELAY = 150; // Small delay per request within batch (ms)
+  private rateLimitHits = 0; // Track rate limit encounters
+
   constructor() {
     this.init();
+  }
+
+  /**
+   * Add randomized jitter to delays to appear more natural
+   */
+  private jitter(baseMs: number, variance: number = 0.3): number {
+    const min = baseMs * (1 - variance);
+    const max = baseMs * (1 + variance);
+    return Math.floor(Math.random() * (max - min) + min);
+  }
+
+  /**
+   * Execute promises with concurrency limit and per-request delays
+   * @param items - Array of items to process
+   * @param fn - Async function to execute for each item
+   * @param concurrency - Max concurrent operations
+   */
+  private async executeWithConcurrency<T, R>(
+    items: T[],
+    fn: (item: T, index: number) => Promise<R>,
+    concurrency: number
+  ): Promise<R[]> {
+    const results: R[] = [];
+    let currentIndex = 0;
+
+    const executeNext = async (): Promise<void> => {
+      while (currentIndex < items.length && !this.stopDeleting) {
+        const index = currentIndex++;
+        const item = items[index];
+        try {
+          // Small jittered delay before each request to spread load
+          await new Promise(r => setTimeout(r, this.jitter(this.PER_REQUEST_DELAY)));
+          const result = await fn(item, index);
+          results[index] = result;
+        } catch (e) {
+          console.error(`Error processing item ${index}:`, e);
+          results[index] = null as any;
+        }
+      }
+    };
+
+    // Start concurrent workers
+    const workers = Array(Math.min(concurrency, items.length))
+      .fill(null)
+      .map(() => executeNext());
+
+    await Promise.all(workers);
+    return results;
   }
 
   private init() {
@@ -1084,7 +1139,7 @@ class CJGrok {
     }
   }
 
-  private async deletePost(id: string, element?: HTMLElement, skipConfirmation: boolean = false) {
+  private async deletePost(id: string, element?: HTMLElement, skipConfirmation: boolean = false): Promise<boolean | 'rate_limited'> {
     try {
         const headers = await this.getHeaders();
         if (!headers) {
@@ -1106,6 +1161,16 @@ class CJGrok {
         body: JSON.stringify({ id: id }),
         credentials: "include"
       });
+
+      // Detect rate limiting
+      if (response.status === 429) {
+        console.warn('Rate limited on delete request');
+        if (element) {
+          element.style.opacity = '1';
+          element.style.pointerEvents = 'auto';
+        }
+        return 'rate_limited';
+      }
 
       if (response.ok) {
         if (element) {
@@ -1337,50 +1402,152 @@ class CJGrok {
   }
 
   private async startDeleteAll() {
-    if (!confirm('Are you sure you want to delete ALL shared posts? This will iterate through all pages and delete them one by one.')) return;
+    if (!confirm('Are you sure you want to delete ALL shared posts? This will use parallel deletion for faster processing.')) return;
     
     this.isDeleting = true;
     this.stopDeleting = false;
+    this.rateLimitHits = 0;
     if (this.stopBtn) this.stopBtn.style.display = 'inline-block';
     
     let totalDeleted = 0;
+    let totalFailed = 0;
+    let currentConcurrency = this.CONCURRENCY_LIMIT;
+
+    // Pre-fetch first batch if not already loaded
+    if (this.posts.length === 0) {
+      await this.fetchPosts();
+    }
 
     do {
-        const postsToDelete = [...this.posts]; 
-        let deletedCount = 0;
+      const postsToDelete = [...this.posts];
+      const totalInBatch = postsToDelete.length;
+      
+      if (totalInBatch === 0) break;
 
-        for (const post of postsToDelete) {
-          if (this.stopDeleting) break;
-          
-          this.updateStatus(`Deleting ${deletedCount + 1}/${postsToDelete.length} (Total: ${totalDeleted})...`);
+      this.updateStatus(`Deleting ${totalInBatch} posts (${currentConcurrency} concurrent)...`);
+
+      // Pre-fetch next page while deleting current batch
+      const nextCursor = this.nextCursor;
+      const prefetchPromise = nextCursor ? this.prefetchPosts(nextCursor) : Promise.resolve(null);
+
+      // Delete current batch in parallel
+      let completedCount = 0;
+      let batchRateLimits = 0;
+      
+      const results = await this.executeWithConcurrency(
+        postsToDelete,
+        async (post, index) => {
+          if (this.stopDeleting) return false;
           
           const postId = post.postId || post.id;
-          if (!postId) continue;
+          if (!postId) return false;
 
-          const success = await this.deletePost(postId, undefined, true);
-          if (success) {
-            deletedCount++;
-            totalDeleted++;
+          const result = await this.deletePost(postId, undefined, true);
+          
+          // Track rate limits
+          if (result === 'rate_limited') {
+            batchRateLimits++;
+            this.rateLimitHits++;
+            return false;
           }
           
-          await new Promise(r => setTimeout(r, 500));
+          completedCount++;
+          
+          // Update status periodically (every 10 deletions to reduce UI thrash)
+          if (completedCount % 10 === 0 || completedCount === totalInBatch) {
+            this.updateStatus(`Deleted ${completedCount}/${totalInBatch} (Total: ${totalDeleted + completedCount})...`);
+          }
+          
+          return result === true;
+        },
+        currentConcurrency
+      );
+
+      // Count results
+      const batchDeleted = results.filter(r => r === true).length;
+      const batchFailed = results.filter(r => r === false).length;
+      totalDeleted += batchDeleted;
+      totalFailed += batchFailed;
+
+      // Handle rate limiting - back off if we're getting limited
+      if (batchRateLimits > 0) {
+        const backoffTime = Math.min(5000, 1000 * Math.pow(2, this.rateLimitHits - 1));
+        this.updateStatus(`Rate limited! Backing off for ${backoffTime/1000}s...`, '#f5a623');
+        await new Promise(r => setTimeout(r, backoffTime));
+        
+        // Reduce concurrency if we keep hitting limits
+        if (this.rateLimitHits >= 3 && currentConcurrency > 2) {
+          currentConcurrency = Math.max(2, currentConcurrency - 1);
+          this.updateStatus(`Reducing concurrency to ${currentConcurrency}`, '#f5a623');
         }
+      } else {
+        // Reset rate limit counter on successful batch
+        this.rateLimitHits = Math.max(0, this.rateLimitHits - 1);
+      }
 
-        if (this.stopDeleting) break;
+      if (this.stopDeleting) break;
 
-        if (this.nextCursor) {
-            this.updateStatus('Fetching next batch...');
-            await this.fetchPosts(this.nextCursor);
-            // If we got no posts even with a cursor, break to prevent infinite loops
-            if (this.posts.length === 0) break;
-        }
+      // Get prefetched posts
+      const prefetchedData = await prefetchPromise;
+      if (prefetchedData) {
+        this.posts = prefetchedData.posts;
+        this.nextCursor = prefetchedData.nextCursor;
+      } else {
+        this.posts = [];
+        this.nextCursor = null;
+      }
 
-    } while (this.nextCursor && !this.stopDeleting);
+      // Jittered delay between batches to prevent rate limiting
+      if (this.posts.length > 0) {
+        await new Promise(r => setTimeout(r, this.jitter(this.DELETE_BATCH_DELAY)));
+      }
+
+    } while (this.posts.length > 0 && !this.stopDeleting);
 
     this.isDeleting = false;
     if (this.stopBtn) this.stopBtn.style.display = 'none';
-    this.updateStatus(`Finished. Deleted ${totalDeleted} posts.`);
+    
+    const status = totalFailed > 0 
+      ? `Finished. Deleted ${totalDeleted} posts (${totalFailed} failed).`
+      : `Finished. Deleted ${totalDeleted} posts.`;
+    this.updateStatus(status, totalFailed > 0 ? '#f5a623' : '#17bf63');
+    
     this.fetchPosts(); 
+  }
+
+  /**
+   * Prefetch posts without updating UI - used for parallel fetching while deleting
+   */
+  private async prefetchPosts(cursor: string): Promise<{ posts: GrokPost[], nextCursor: string | null } | null> {
+    try {
+      const headers = await this.getHeaders();
+      if (!headers) return null;
+
+      const body: any = { limit: 400, cursor };
+
+      const response = await fetch("https://grok.com/rest/media/post/list-shared-posts", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...headers
+        },
+        body: JSON.stringify(body),
+        credentials: "include"
+      });
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      const posts = Array.isArray(data) ? data : (data.items || data.posts || []);
+      
+      return {
+        posts,
+        nextCursor: data.nextCursor || null
+      };
+    } catch (e) {
+      console.error('Prefetch error:', e);
+      return null;
+    }
   }
 }
 
