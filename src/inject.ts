@@ -30,7 +30,7 @@ class CJGrok {
 
   // Concurrency settings for parallel deletion
   // Conservative defaults to avoid rate limiting - adjust if needed
-  private readonly CONCURRENCY_LIMIT = 5; // Number of simultaneous delete requests
+  private readonly CONCURRENCY_LIMIT = 3; // Number of simultaneous delete requests. Tested up to 5 safely.
   private readonly DELETE_BATCH_DELAY = 500; // Delay between batches (ms)
   private readonly PER_REQUEST_DELAY = 150; // Small delay per request within batch (ms)
   private rateLimitHits = 0; // Track rate limit encounters
