@@ -704,7 +704,7 @@ class CJGrok {
     const fetchBtn = this.createButton('Fetch Posts', '#1DA1F2');
     fetchBtn.onclick = () => this.fetchPosts();
 
-    const deleteAllBtn = this.createButton('Delete All Sequentially', '#e0245e');
+    const deleteAllBtn = this.createButton('Delete All', '#e0245e');
     deleteAllBtn.onclick = () => this.startDeleteAll();
 
     const stopBtn = this.createButton('Stop Deleting', '#8899a6');
@@ -1402,7 +1402,7 @@ class CJGrok {
   }
 
   private async startDeleteAll() {
-    if (!confirm('Are you sure you want to delete ALL shared posts? This will use parallel deletion for faster processing.')) return;
+    if (!confirm('Are you sure you want to delete ALL shared posts?')) return;
     
     this.isDeleting = true;
     this.stopDeleting = false;
