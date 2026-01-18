@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "CJGrok",
-    "version": "1.6.0",
+    "version": "1.6.1",
     "description": "CJGrok - Provides superpowers to Grok AI",
     "icons": {
         "16": "images/icon.png",
