@@ -15,7 +15,7 @@
 
 A Chrome extension that provides superpowers to Grok AI. It is designed to manage and delete your Grok Imagine posts, especially the hidden ones.
 
-[**Features**](#features) • [**Installation**](#installation) • [**Usage**](#usage) • [**Privacy**](#privacy--security)
+[**Features**](#features) • [**Installation**](#installation) • [**Usage**](#usage) • [**Privacy**](#privacy--security) • [**Support Developer**](https://checkout.dodopayments.com/buy/pdt_0NWY22vVeDtrQFRE7xgB9?quantity=1)
 
 </div>
 
